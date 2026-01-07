@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - MessageFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f3f4ff 100%);
+            min-height: 100vh;
+        }
+
+        /* Navigation - Matching Theme */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #4b5563;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #667eea;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 50px;
+            font-size: 0.9rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .nav-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        /* Chat Container */
+        .chat-page-container {
+            max-width: 1200px;
+            margin: 100px auto 30px;
+            padding: 0 2rem;
+            min-height: calc(100vh - 130px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .chat-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .chat-header p {
+            color: #6b7280;
+            font-size: 1.05rem;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Chat Header Inside Container */
+        .chat-container-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .chat-bot-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .chat-bot-info {
+            flex: 1;
+        }
+
+        .chat-bot-info h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 0.15rem;
+        }
+
+        .chat-bot-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: #10b981;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(0.95);
+            }
+        }
+
+        /* Messages Area */
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: #fafbfc;
+        }
+
+        .messages-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .messages-area::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Message Bubbles */
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            animation: messageSlideIn 0.4s ease-out;
+            opacity: 0;
+            animation-fill-mode: forwards;
+        }
+
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .message.customer {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .message.bot .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .message.customer .message-avatar {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .message-content {
+            max-width: 65%;
+        }
+
+        .message-bubble {
+            padding: 0.85rem 1.25rem;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.bot .message-bubble {
+            background: white;
+            color: #1a1a1a;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.customer .message-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-timestamp {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.35rem;
+            padding: 0 0.5rem;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            background: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            width: fit-content;
+            animation: messageSlideIn 0.4s ease-out;
+        }
+
+        .typing-indicator.show {
+            display: flex;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 0.35rem;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #cbd5e1;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-8px);
+            }
+        }
+
+        /* Input Area */
+        .input-area {
+            padding: 1.5rem 2rem;
+            border-top: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 0 0 20px 20px;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 0.95rem 1.25rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            background: #fafafa;
+            resize: none;
+            max-height: 120px;
+            line-height: 1.5;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .message-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .send-button {
+            padding: 0.95rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .send-icon {
+            font-size: 1.1rem;
+        }
+
+        /* Welcome Message Style */
+        .welcome-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Quick Actions (Optional Feature) */
+        .quick-actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .quick-action-btn {
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .quick-action-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateY(-2px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .chat-page-container {
+                margin: 90px auto 20px;
+                padding: 0 1rem;
+            }
+
+            .chat-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .chat-container {
+                height: calc(100vh - 180px);
+                border-radius: 16px;
+            }
+
+            .messages-area {
+                padding: 1.5rem 1rem;
+            }
+
+            .message-content {
+                max-width: 80%;
+            }
+
+            .input-area {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .send-button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">MessageFlow</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/">Features</a></li>
+                <li><a href="#" class="active">Support Chat</a></li>
+                <li><a href="/">Pricing</a></li>
+            </ul>
+            <div class="nav-user">
+                <div class="nav-user-avatar" id="userAvatar">👤</div>
+                <span id="userName">Customer</span>
+                <a href="/logout" class="btn btn-secondary" style="margin-left: 1rem;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Chat Page Container -->
+    <div class="chat-page-container">
+        <div class="chat-header fade-in">
+            <h1>Customer Support</h1>
+            <p>Chat with our support team - we're here to help!</p>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="chat-container fade-in">
+            <!-- Chat Header -->
+            <div class="chat-container-header">
+                <div class="chat-bot-avatar">🤖</div>
+                <div class="chat-bot-info">
+                    <h3>MessageFlow Support</h3>
+                    <div class="chat-bot-status">
+                        <span class="status-dot"></span>
+                        <span>Online - Ready to help</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages Area -->
+            <div class="messages-area" id="messagesArea">
+                <!-- Messages will be dynamically inserted here -->
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="messageInput" 
+                        class="message-input" 
+                        placeholder="Type your message..."
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button class="send-button" id="sendButton">
+                    <span>Send</span>
+                    <span class="send-icon">➤</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const messagesArea = document.getElementById('messagesArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const navbar = document.getElementById('navbar');
+        const userName = document.getElementById('userName');
+        const userAvatar = document.getElementById('userAvatar');
+
+        // Load user data from localStorage or session
+        async function loadUserData() {
+            try {
+                // First try to get user data from localStorage
+                const userData = localStorage.getItem('messageflow_user');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    userName.textContent = user.name || 'Customer';
+                    const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : '👤';
+                    userAvatar.textContent = initials.length <= 2 ? initials : '👤';
+                }
+                
+                // Then try to get from backend session
+                const response = await fetch('/api/session');
+                const sessionData = await response.json();
+                
+                if (sessionData.user) {
+                    userName.textContent = sessionData.user.name || 'Customer';
+                    const initials = sessionData.user.name ? sessionData.user.name.split(' ').map(n => n[0]).join('').toUpperCase() : '👤';
+                    userAvatar.textContent = initials.length <= 2 ? initials : '👤';
+                    
+                    // Update localStorage with session data if localStorage is empty
+                    if (!userData) {
+                        const userSession = {
+                            name: sessionData.user.name,
+                            email: sessionData.user.email,
+                            role: sessionData.user.role,
+                            loginTime: new Date().toISOString()
+                        };
+                        localStorage.setItem('messageflow_user', JSON.stringify(userSession));
+                        localStorage.setItem('messageflow_role', sessionData.user.role);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+        
+        // Update navigation based on login status
+        function updateNavigation() {
+            const userData = localStorage.getItem('messageflow_user');
+            const userRole = localStorage.getItem('messageflow_role');
+            
+            if (userData && userRole) {
+                // User is logged in, no need to change anything on customer page
+                // as logout button is already in the nav-user section
+            }
+        }
+
+        // Message storage
+        let messages = [];
+
+        // Format time
+        function formatTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit',
+                hour12: true 
+            });
+        }
+
+        // Create message element
+        function createMessageElement(type, text, showTimestamp = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = type === 'bot' ? '🤖' : userAvatar.textContent;
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = text;
+            
+            content.appendChild(bubble);
+            
+            if (showTimestamp) {
+                const timestamp = document.createElement('div');
+                timestamp.className = 'message-timestamp';
+                timestamp.textContent = formatTime();
+                content.appendChild(timestamp);
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            
+            return messageDiv;
+        }
+
+        // Add message to chat
+        function addMessage(type, text, showTimestamp = true) {
+            const messageElement = createMessageElement(type, text, showTimestamp);
+            messagesArea.appendChild(messageElement);
+            
+            // Store message
+            messages.push({ type, text, timestamp: new Date() });
+            
+            // Scroll to bottom smoothly
+            setTimeout(() => {
+                messagesArea.scrollTo({
+                    top: messagesArea.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'message bot';
+            indicator.id = 'typingIndicator';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = '🤖';
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator show';
+            
+            typingDiv.innerHTML = `
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+                <span style="font-size: 0.85rem; color: #6b7280;">typing...</span>
+            `;
+            
+            indicator.appendChild(avatar);
+            indicator.appendChild(typingDiv);
+            messagesArea.appendChild(indicator);
+            
+            // Scroll to bottom
+            messagesArea.scrollTo({
+                top: messagesArea.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // Remove typing indicator
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // Bot response after customer message
+        function sendBotAcknowledgement() {
+            showTypingIndicator();
+            
+            const responses = [
+                "✅ Thanks for reaching out! Our support agents will review your message and get back to you shortly.",
+                "✅ Got it! Our team will respond to your message as soon as possible. Thanks for your patience! 😊",
+                "✅ Message received! A support agent will be with you shortly. Please stay tuned!",
+                "✅ Thank you for contacting us! Our support team will get back to you very soon. We appreciate your patience! 🙏"
+            ];
+            
+            const response = responses[Math.floor(Math.random() * responses.length)];
+            
+            setTimeout(() => {
+                removeTypingIndicator();
+                addMessage('bot', response);
+            }, 1500 + Math.random() * 1000); // Random delay between 1.5-2.5s
+        }
+
+        // Send customer message
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            
+            if (!text) return;
+            
+            // Add customer message
+            addMessage('customer', text);
+            
+            // Clear input
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            
+            // Reset button state
+            sendButton.disabled = false;
+            
+            try {
+                // Send message to backend
+                const response = await fetch('/api/customer/message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: text
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Send bot acknowledgement
+                    sendBotAcknowledgement();
+                } else {
+                    addMessage('bot', '❌ Sorry, there was an issue sending your message. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                addMessage('bot', '❌ Sorry, there was an issue sending your message. Please try again.');
+            }
+        }
+
+        // Load conversation history from backend
+        async function loadConversationHistory() {
+            try {
+                const response = await fetch('/api/customer/messages');
+                const messages = await response.json();
+                
+                if (messages.length > 0) {
+                    messages.forEach(msg => {
+                        // Add customer message
+                        addMessage('customer', msg.message_text, true);
+                        
+                        // Add replies if any
+                        if (msg.replies && msg.replies.length > 0) {
+                            msg.replies.forEach(reply => {
+                                addMessage('bot', `🤖 Agent ${reply.agent_name}: ${reply.reply_text}`);
+                            });
+                        }
+                    });
+                } else {
+                    // Show welcome messages if no conversation history
+                    showWelcomeMessages();
+                }
+            } catch (error) {
+                console.error('Error loading conversation history:', error);
+                showWelcomeMessages(); // Show welcome if there's an error
+            }
+        }
+        
+        // Initial welcome messages
+        function showWelcomeMessages() {
+            setTimeout(() => {
+                addMessage('bot', '👋 Hi there! Welcome to MessageFlow Support.');
+            }, 500);
+            
+            setTimeout(() => {
+                addMessage('bot', 'How can I help you today? Feel free to describe your issue, and our support team will get back to you shortly.');
+            }, 1500);
+            
+            // Optional: Add quick action buttons
+            setTimeout(() => {
+                const quickActionsDiv = document.createElement('div');
+                quickActionsDiv.className = 'message bot';
+                quickActionsDiv.innerHTML = `
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">
+                        <div class="quick-actions">
+                            <button class="quick-action-btn" onclick="setQuickMessage('I need help with my account')">Account Help</button>
+                            <button class="quick-action-btn" onclick="setQuickMessage('I have a billing question')">Billing Question</button>
+                            <button class="quick-action-btn" onclick="setQuickMessage('Technical issue')">Technical Issue</button>
+                        </div>
+                    </div>
+                `;
+                messagesArea.appendChild(quickActionsDiv);
+                messagesArea.scrollTo({
+                    top: messagesArea.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 2000);
+        }
+
+        // Quick message setter
+        function setQuickMessage(message) {
+            messageInput.value = message;
+            messageInput.focus();
+        }
+
+        // Make function global
+        window.setQuickMessage = setQuickMessage;
+
+        // Event Listeners
+        sendButton.addEventListener('click', sendMessage);
+
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            loadUserData();
+            updateNavigation();
+            loadConversationHistory();
+        });
+
+        // Check authentication
+        const storedUser = localStorage.getItem('messageflow_user');
+        if (!storedUser) {
+            console.log('No user logged in');
+            // Optionally redirect to login page
+            // window.location.href = '/login';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MessageFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f3f4ff 100%);
+            min-height: 100vh;
+        }
+
+        /* Navigation - Matching Home Page */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #4b5563;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #667eea;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.65rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -1px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Main Container */
+        .login-container {
+            max-width: 900px;
+            margin: 120px auto 60px;
+            padding: 0 2rem;
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 3rem;
+            gap: 1rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.4s ease;
+        }
+
+        .step.active .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-label {
+            font-weight: 600;
+            color: #6b7280;
+            transition: color 0.4s ease;
+        }
+
+        .step.active .step-label {
+            color: #667eea;
+        }
+
+        .step.completed .step-label {
+            color: #10b981;
+        }
+
+        .step-divider {
+            width: 60px;
+            height: 2px;
+            background: #e5e7eb;
+            transition: background 0.4s ease;
+        }
+
+        .step.completed ~ .step-divider {
+            background: #10b981;
+        }
+
+        /* Role Selection Container */
+        .role-selection {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.5s ease;
+        }
+
+        .role-selection.hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+            position: absolute;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1a1a1a;
+        }
+
+        .section-header p {
+            font-size: 1.15rem;
+            color: #6b7280;
+        }
+
+        .role-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .role-card {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .role-card:hover {
+            transform: translateY(-8px);
+            border-color: #667eea;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .role-card.selected {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .role-card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .role-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .role-card:hover .role-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .role-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #1a1a1a;
+        }
+
+        .role-card p {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .role-checkmark {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 28px;
+            height: 28px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .role-card.selected .role-checkmark {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Login Form Container */
+        .login-form-container {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            transition: all 0.5s ease;
+            position: absolute;
+            width: 100%;
+            max-width: 900px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+        }
+
+        .login-form-container.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: all;
+            position: relative;
+            left: auto;
+            transform: none;
+        }
+
+        .login-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .selected-role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 50px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .login-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .login-header p {
+            color: #6b7280;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            gap: 0.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 0.95rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.95rem 1.25rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+        
+        .error-message {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #b91c1c;
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: none;
+            text-align: center;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6b7280;
+        }
+
+        .register-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .register-link a:hover {
+            color: #764ba2;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .section-header h1 {
+                font-size: 2rem;
+            }
+
+            .role-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .step-indicator {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .step-divider {
+                width: 2px;
+                height: 30px;
+            }
+        }
+
+        /* Loading Animation */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .loading {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation - Matching Home Page -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">MessageFlow</a>
+            <ul class="nav-links">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="index.html#features">Features</a></li>
+                <li><a href="index.html#how-it-works">How It Works</a></li>
+                <li><a href="index.html#pricing">Pricing</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <a href="#" class="btn btn-primary active">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Login Container -->
+    <div class="login-container">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <span class="step-label">Select Role</span>
+            </div>
+            <div class="step-divider"></div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <span class="step-label">Login</span>
+            </div>
+        </div>
+
+        <!-- Role Selection Section -->
+        <div class="role-selection" id="roleSelection">
+            <div class="section-header">
+                <h1>Welcome Back</h1>
+                <p>Select how you'd like to continue</p>
+            </div>
+            
+            <div class="role-cards">
+                <!-- Customer Role Card -->
+                <div class="role-card" data-role="customer">
+                    <div class="role-checkmark">✓</div>
+                    <div class="role-card-content">
+                        <div class="role-icon">👤</div>
+                        <h3>Customer</h3>
+                        <p>Access your support tickets and get help from our team</p>
+                    </div>
+                </div>
+
+                <!-- Support Agent Role Card -->
+                <div class="role-card" data-role="agent">
+                    <div class="role-checkmark">✓</div>
+                    <div class="role-card-content">
+                        <div class="role-icon">🎧</div>
+                        <h3>Support Agent</h3>
+                        <p>Manage customer inquiries and provide exceptional support</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Form Section -->
+        <div class="login-form-container" id="loginFormContainer">
+            <div class="login-card">
+                <button class="back-button" id="backButton">
+                    ← Back to role selection
+                </button>
+
+                <div class="login-header">
+                    <div class="selected-role-badge" id="roleBadge">
+                        <span id="roleIcon"></span>
+                        <span id="roleText"></span>
+                    </div>
+                    <h2 id="loginTitle">Login</h2>
+                    <p id="loginSubtitle">Enter your credentials to continue</p>
+                </div>
+
+                <form id="loginForm">
+                    <div id="errorMessage" class="error-message"></div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            class="form-input" 
+                            placeholder="you@example.com"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input 
+                            type="text" 
+                            id="name" 
+                            class="form-input" 
+                            placeholder="John Doe"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="login-button" id="loginButton">
+                        Continue
+                    </button>
+                </form>
+
+                <div class="register-link">
+                    Don't have an account? <a href="/register">Register here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let selectedRole = null;
+
+        // DOM elements
+        const roleCards = document.querySelectorAll('.role-card');
+        const roleSelection = document.getElementById('roleSelection');
+        const loginFormContainer = document.getElementById('loginFormContainer');
+        const backButton = document.getElementById('backButton');
+        const loginForm = document.getElementById('loginForm');
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const roleBadge = document.getElementById('roleBadge');
+        const roleIcon = document.getElementById('roleIcon');
+        const roleText = document.getElementById('roleText');
+        const loginTitle = document.getElementById('loginTitle');
+        const loginSubtitle = document.getElementById('loginSubtitle');
+        const loginButton = document.getElementById('loginButton');
+
+        // Role selection handler
+        roleCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const role = card.dataset.role;
+                
+                // Remove previous selection
+                roleCards.forEach(c => c.classList.remove('selected'));
+                
+                // Add selection to clicked card
+                card.classList.add('selected');
+                selectedRole = role;
+
+                // Wait for animation, then transition to login form
+                setTimeout(() => {
+                    showLoginForm(role);
+                }, 400);
+            });
+        });
+
+        // Show login form based on selected role
+        function showLoginForm(role) {
+            // Update step indicator
+            step1.classList.remove('active');
+            step1.classList.add('completed');
+            step2.classList.add('active');
+
+            // Hide role selection
+            roleSelection.classList.add('hidden');
+
+            // Show login form
+            loginFormContainer.classList.add('active');
+
+            // Update login form content based on role
+            if (role === 'customer') {
+                roleIcon.textContent = '👤';
+                roleText.textContent = 'Customer Login';
+                loginTitle.textContent = 'Customer Login';
+                loginSubtitle.textContent = 'Access your support tickets and messages';
+                loginButton.textContent = 'Login as Customer';
+            } else if (role === 'agent') {
+                roleIcon.textContent = '🎧';
+                roleText.textContent = 'Agent Login';
+                loginTitle.textContent = 'Agent Login';
+                loginSubtitle.textContent = 'Access your agent dashboard';
+                loginButton.textContent = 'Login as Support Agent';
+            }
+
+            // Scroll to top smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Back button handler
+        backButton.addEventListener('click', () => {
+            // Update step indicator
+            step2.classList.remove('active');
+            step1.classList.remove('completed');
+            step1.classList.add('active');
+
+            // Show role selection
+            roleSelection.classList.remove('hidden');
+
+            // Hide login form
+            loginFormContainer.classList.remove('active');
+
+            // Reset selection
+            roleCards.forEach(c => c.classList.remove('selected'));
+            selectedRole = null;
+        });
+
+        // Form submission handler
+        // Form submission handler
+        const errorMessageDiv = document.getElementById('errorMessage');
+
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.style.display = 'block';
+            errorMessageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function hideError() {
+            errorMessageDiv.style.display = 'none';
+        }
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            hideError();
+
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
+
+            // Show loading state
+            loginButton.textContent = 'Logging in...';
+            loginButton.classList.add('loading');
+            loginButton.disabled = true;
+
+            // Send login request to backend
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    role: selectedRole
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Store user data in localStorage
+                    const userData = {
+                        email: email,
+                        name: name,
+                        role: selectedRole,
+                        loginTime: new Date().toISOString()
+                    };
+                    
+                    localStorage.setItem('messageflow_user', JSON.stringify(userData));
+                    localStorage.setItem('messageflow_role', selectedRole);
+                    
+                    // Redirect based on role
+                    if (selectedRole === 'customer') {
+                        window.location.href = '/customer';
+                    } else if (selectedRole === 'agent') {
+                        window.location.href = '/dashboard';
+                    }
+                } else {
+                    showError(data.error || 'Login failed: Unknown error');
+                    loginButton.textContent = 'Continue';
+                    loginButton.classList.remove('loading');
+                    loginButton.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Login error:', error);
+                showError('Login failed: ' + error.message);
+                loginButton.textContent = 'Continue';
+                loginButton.classList.remove('loading');
+                loginButton.disabled = false;
+            });
+        });
+
+        // Navbar scroll effect (matching home page)
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Check if user is already logged in
+        window.addEventListener('load', () => {
+            const storedUser = localStorage.getItem('messageflow_user');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                console.log('User already logged in:', user);
+                // Optionally redirect to dashboard
+            }
+        });
+    </script>
+</body>
+</html>

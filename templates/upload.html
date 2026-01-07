@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Messages - Agent Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Reuse styles from dashboard */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f8f9ff; color: #1a1a1a; min-height: 100vh; }
+        
+        /* Navigation (Same as dashboard) */
+        nav { background: white; border-bottom: 1px solid #e5e7eb; padding: 1rem 2rem; position: fixed; top: 0; width: 100%; z-index: 100; }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        .back-link { text-decoration: none; color: #4b5563; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
+        .back-link:hover { color: #667eea; }
+
+        .container { max-width: 800px; margin: 100px auto 30px; padding: 2rem; }
+        
+        .upload-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        h1 { font-size: 1.8rem; margin-bottom: 1rem; color: #1a1a1a; }
+        p { color: #6b7280; margin-bottom: 2rem; }
+
+        .file-drop-area {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 3rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #f8fafc;
+        }
+        
+        .file-drop-area:hover { border-color: #667eea; background: #eff6ff; }
+        
+        .icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+        
+        input[type="file"] { display: none; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: transform 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .status-box {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+            text-align: left;
+        }
+        .status-box.success { background: #dcfce7; color: #166534; border: 1px solid #bbb; }
+        .status-box.error { background: #fee2e2; color: #991b1b; border: 1px solid #bbb; }
+
+        code { background: #f1f5f9; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">MessageFlow</a>
+            <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="upload-card">
+            <h1>Upload Messages (CSV)</h1>
+            <p>Bulk import customer messages. CSV Format: <code>customer_name, customer_email, message_text, urgency</code></p>
+            
+            <form id="uploadForm">
+                <label class="file-drop-area" id="dropArea">
+                    <span class="icon">📂</span>
+                    <span id="fileLabel">Click to select or drag CSV file here</span>
+                    <input type="file" id="fileInput" accept=".csv" required>
+                </label>
+                
+                <button type="submit" class="btn-primary" id="uploadBtn">Upload Messages</button>
+            </form>
+
+            <div id="statusBox" class="status-box"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const fileLabel = document.getElementById('fileLabel');
+        const statusBox = document.getElementById('statusBox');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                fileLabel.textContent = e.target.files[0].name;
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!fileInput.files.length) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            statusBox.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/agent/upload-messages', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                statusBox.style.display = 'block';
+                if (result.success) {
+                    statusBox.className = 'status-box success';
+                    statusBox.innerHTML = `<strong>Success!</strong> ${result.count} messages imported.`;
+                    form.reset();
+                    fileLabel.textContent = 'Click to select or drag CSV file here';
+                } else {
+                    statusBox.className = 'status-box error';
+                    statusBox.innerHTML = `<strong>Error:</strong> ${result.error}`;
+                }
+            } catch (err) {
+                statusBox.style.display = 'block';
+                statusBox.className = 'status-box error';
+                statusBox.innerHTML = `<strong>Network Error:</strong> Failed to upload.`;
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload Messages';
+            }
+        });
+    </script>
+</body>
+</html>

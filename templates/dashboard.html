@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Dashboard - MessageFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f3f4ff 100%);
+            min-height: 100vh;
+        }
+
+        /* Navigation - Matching Theme */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #4b5563;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #667eea;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 50px;
+            font-size: 0.9rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .nav-user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 90px auto 30px;
+            padding: 0 2rem;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header p {
+            color: #6b7280;
+            font-size: 1.05rem;
+        }
+
+        /* KPI Cards Section */
+        .kpi-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 1.75rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .kpi-icon.messages {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+        }
+
+        .kpi-icon.urgent {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%);
+        }
+
+        .kpi-icon.pending {
+            background: linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(249, 115, 22, 0.15) 100%);
+        }
+
+        .kpi-icon.time {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+        }
+
+        .kpi-trend {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+        }
+
+        .kpi-trend.up {
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .kpi-trend.down {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .kpi-content h3 {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            line-height: 1;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            animation: fadeIn 0.6s ease-out 0.4s both;
+        }
+
+        /* Inbox Section */
+        .inbox-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+
+        .inbox-header {
+            padding: 1.75rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .inbox-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .inbox-title h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .inbox-count {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.35rem 0.9rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Search and Filters */
+        .search-filter-bar {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.1rem;
+            color: #9ca3af;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Message List */
+        .message-list {
+            max-height: 650px;
+            overflow-y: auto;
+        }
+
+        .message-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .message-list::-webkit-scrollbar-track {
+            background: #f9fafb;
+        }
+
+        .message-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .message-item {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .message-item:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+            border-left: 4px solid #667eea;
+            padding-left: calc(2rem - 4px);
+        }
+
+        .message-item.urgent {
+            border-left: 4px solid #ef4444;
+            background: rgba(239, 68, 68, 0.02);
+            padding-left: calc(2rem - 4px);
+        }
+
+        .message-item.urgent:hover {
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .message-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .message-customer-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+        }
+
+        .customer-details {
+            flex: 1;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 0.95rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .customer-id {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .message-badges {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge.urgent {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%);
+            color: #dc2626;
+        }
+
+        .badge.normal {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%);
+            color: #2563eb;
+        }
+
+        .badge.new {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+            color: #059669;
+        }
+
+        .badge.open {
+            background: linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(249, 115, 22, 0.15) 100%);
+            color: #f97316;
+        }
+
+        .badge.resolved {
+            background: linear-gradient(135deg, rgba(107, 114, 128, 0.15) 0%, rgba(75, 85, 99, 0.15) 100%);
+            color: #4b5563;
+        }
+
+        .badge.count {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%);
+            color: #7c3aed;
+        }
+
+        .message-preview {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .message-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .message-time {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        /* Side Panel */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+        }
+
+        .panel-card h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-icon {
+            font-size: 1.3rem;
+        }
+
+        /* Customer Preview */
+        .customer-preview-empty {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #9ca3af;
+        }
+
+        .customer-preview-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+
+        .customer-preview-content {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .preview-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .preview-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .preview-id {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #6b7280;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #1a1a1a;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Quick Actions */
+        .quick-actions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .quick-action-item {
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .quick-action-item:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+            transform: translateX(4px);
+        }
+
+        .action-icon {
+            font-size: 1.3rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .side-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .dashboard-container {
+                padding: 0 1rem;
+                margin-top: 80px;
+            }
+
+            .kpi-section {
+                grid-template-columns: 1fr;
+            }
+
+            .search-filter-bar {
+                flex-direction: column;
+            }
+
+            .filter-buttons {
+                flex-wrap: wrap;
+            }
+
+            .message-item {
+                padding: 1rem;
+            }
+
+            .message-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .message-badges {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">MessageFlow</a>
+            <ul class="nav-links">
+                <li><a href="/dashboard" class="active">Dashboard</a></li>
+                <li><a href="/dashboard">Inbox</a></li>
+                <li><a href="/dashboard">Analytics</a></li>
+                <li><a href="/dashboard">Profile</a></li>
+            </ul>
+            <div class="nav-user">
+                <div class="nav-user-avatar">SA</div>
+                <span id="agentName">Support Agent</span>
+                <a href="/logout" class="btn btn-secondary" id="logoutBtn" style="margin-left: 1rem; padding: 0.5rem 1rem; font-size: 0.9rem;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Container -->
+    <div class="dashboard-container">
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1>Agent Dashboard</h1>
+            <p>Manage and respond to customer conversations efficiently</p>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-section">
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon messages">💬</div>
+                </div>
+                <div class="kpi-content">
+                    <h3>Total Messages</h3>
+                    <div class="kpi-value" id="kpiTotalMessages">...</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon urgent">🚨</div>
+                </div>
+                <div class="kpi-content">
+                    <h3>Urgent Conversations</h3>
+                    <div class="kpi-value" id="kpiUrgent">...</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon pending">⏳</div>
+                </div>
+                <div class="kpi-content">
+                    <h3>Pending Responses</h3>
+                    <div class="kpi-value" id="kpiPending">...</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-header">
+                    <div class="kpi-icon time">⚡</div>
+                </div>
+                <div class="kpi-content">
+                    <h3>Avg Response Time</h3>
+                    <div class="kpi-value" id="kpiResponseTime">...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Inbox Section -->
+            <div class="inbox-section">
+                <div class="inbox-header">
+                    <div class="inbox-title">
+                        <h2>Customer Inbox</h2>
+                        <span class="inbox-count" id="messageCount">0 Messages</span>
+                    </div>
+
+                    <!-- Search and Filter Bar -->
+                    <div class="search-filter-bar">
+                        <div class="search-box">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="searchInput" placeholder="Search by customer or message...">
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="urgent">Urgent</button>
+                            <button class="filter-btn" data-filter="normal">Normal</button>
+                            <button class="filter-btn" data-filter="unresolved">Unresolved</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message List -->
+                <div class="message-list" id="messageList">
+                    <!-- Messages will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Side Panel -->
+            <div class="side-panel">
+                <!-- Customer Preview Panel -->
+                <div class="panel-card">
+                    <h3>
+                        <span class="panel-icon">👤</span>
+                        Customer Details
+                    </h3>
+                    <div id="customerPreview">
+                        <div class="customer-preview-empty">
+                            <div class="customer-preview-empty-icon">📋</div>
+                            <p>Select a message to view customer details</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Panel -->
+                <div class="panel-card">
+                    <h3>
+                        <span class="panel-icon">⚡</span>
+                        Quick Actions
+                    </h3>
+                    <div class="quick-actions-list">
+                        <div class="quick-action-item" onclick="window.location.href='/agent/analytics'">
+                            <span class="action-icon">📊</span>
+                            <span>View Analytics</span>
+                        </div>
+                        <div class="quick-action-item" onclick="window.location.href='/agent/upload'">
+                            <span class="action-icon">📥</span>
+                            <span>Export Messages</span>
+                        </div>
+                        <div class="quick-action-item" onclick="window.location.href='/agent/settings'">
+                            <span class="action-icon">⚙️</span>
+                            <span>Settings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let messagesData = [];
+        let selectedMessage = null;
+        let currentFilter = 'all';
+        let searchTerm = '';
+
+        // DOM Elements
+        const messageList = document.getElementById('messageList');
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const messageCount = document.getElementById('messageCount');
+        const customerPreview = document.getElementById('customerPreview');
+        const navbar = document.getElementById('navbar');
+
+        // Initialize
+        async function init() {
+            await Promise.all([loadMessages(), loadStats()]);
+            attachEventListeners();
+        }
+
+        // Load user data from localStorage or session
+        async function loadUserData() {
+            try {
+                // First try to get user data from localStorage
+                const userData = localStorage.getItem('messageflow_user');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    // Update UI with user data if needed
+                }
+                
+                // Then try to get from backend session
+                const response = await fetch('/api/session');
+                const sessionData = await response.json();
+                
+                if (sessionData.user) {
+                    // Update UI with session data if needed
+                    
+                    // Update localStorage with session data if localStorage is empty
+                    if (!userData) {
+                        const userSession = {
+                            name: sessionData.user.name,
+                            email: sessionData.user.email,
+                            role: sessionData.user.role,
+                            loginTime: new Date().toISOString()
+                        };
+                        localStorage.setItem('messageflow_user', JSON.stringify(userSession));
+                        localStorage.setItem('messageflow_role', sessionData.user.role);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+        
+        // Load Stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/agent/stats');
+                const data = await response.json();
+                
+                document.getElementById('kpiTotalMessages').textContent = data.total_messages;
+                document.getElementById('kpiUrgent').textContent = data.urgent_conversations;
+                document.getElementById('kpiPending').textContent = data.pending_responses;
+                document.getElementById('kpiResponseTime').textContent = data.avg_response_time;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load messages from backend
+        async function loadMessages() {
+            try {
+                const response = await fetch('/api/agent/messages');
+                messagesData = await response.json();
+                
+                // Update message avatars and format data
+                messagesData = messagesData.map(msg => ({
+                    ...msg,
+                    id: msg.id,
+                    customerName: msg.customer_name,
+                    customerId: `CUST-${msg.customer_id}`,
+                    avatar: msg.customer_name.split(' ').map(n => n[0]).join('').toUpperCase(),
+                    urgency: msg.urgency.toLowerCase(),
+                    status: msg.status.toLowerCase(),
+                    preview: msg.message_text,
+                    timestamp: formatTimeAgo(new Date(msg.timestamp)),
+                    accountType: msg.account_type || "Standard Account",
+                    lastInteraction: "Recently", // Default value
+                    loanStatus: "None" // Default value
+                }));
+                
+                renderMessages();
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                messageList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">❌</div>
+                        <h3>Error loading messages</h3>
+                        <p>There was an issue connecting to the server</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Format time as 'X min ago'
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins} min ago`;
+            
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+            
+            const diffDays = Math.floor(diffHours / 24);
+            return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+        }
+
+        // Render Messages
+        function renderMessages() {
+            const filteredMessages = getFilteredMessages();
+            
+            // Update count
+            messageCount.textContent = `${filteredMessages.length} Message${filteredMessages.length !== 1 ? 's' : ''}`;
+
+            if (filteredMessages.length === 0) {
+                messageList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>No messages found</h3>
+                        <p>Try adjusting your filters or search terms</p>
+                    </div>
+                `;
+                return;
+            }
+
+            messageList.innerHTML = filteredMessages.map(msg => `
+                <div class="message-item ${msg.urgency}" data-id="${msg.id}" onclick="selectMessage(${msg.id})">
+                    <div class="message-header-row">
+                        <div class="message-customer-info">
+                            <div class="customer-avatar" onclick="viewCustomerDetails(event, ${msg.id})">${msg.avatar}</div>
+                            <div class="customer-details">
+                                <div class="customer-name">${msg.customerName}</div>
+                                <div class="customer-id">${msg.customerId}</div>
+                            </div>
+                        </div>
+                        <div class="message-badges">
+                            <span class="badge ${msg.urgency}">${msg.urgency}</span>
+                            <span class="badge ${msg.status}">${msg.status}</span>
+                            ${msg.message_count > 1 ? `<span class="badge count">${msg.message_count} msgs</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="message-preview">${msg.preview}</div>
+                    <div class="message-footer">
+                        <div class="message-time">
+                            <span>🕐</span>
+                            <span>${msg.timestamp}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get Filtered Messages
+        function getFilteredMessages() {
+            let filtered = [...messagesData];
+
+            // Apply filter
+            if (currentFilter === 'urgent') {
+                filtered = filtered.filter(msg => msg.urgency === 'urgent');
+            } else if (currentFilter === 'normal') {
+                filtered = filtered.filter(msg => msg.urgency === 'normal');
+            } else if (currentFilter === 'unresolved') {
+                filtered = filtered.filter(msg => msg.status !== 'resolved');
+            }
+
+            // Apply search
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filtered = filtered.filter(msg => 
+                    msg.customerName.toLowerCase().includes(term) ||
+                    msg.customerId.toLowerCase().includes(term) ||
+                    msg.preview.toLowerCase().includes(term)
+                );
+            }
+
+            // Sort: urgent messages first, then by timestamp
+            filtered.sort((a, b) => {
+                if (a.urgency === 'urgent' && b.urgency !== 'urgent') return -1;
+                if (a.urgency !== 'urgent' && b.urgency === 'urgent') return 1;
+                // Sort by timestamp (newest first)
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            });
+
+            return filtered;
+        }
+
+        // Select Message
+        // Select Message (Opens Chat)
+        function selectMessage(id) {
+            const message = messagesData.find(msg => msg.id === id);
+            if (message) {
+                // Navigate to agent chat page for this specific customer
+                window.location.href = `/agent/chat/${message.customer_id}`;
+            }
+        }
+
+        // View Customer Details (Opens Side Panel)
+        function viewCustomerDetails(event, id) {
+            // Stop propagation so we don't open the chat
+            event.stopPropagation();
+            
+            selectedMessage = messagesData.find(msg => msg.id === id);
+            if (selectedMessage) {
+                showCustomerPreview(selectedMessage);
+                
+                // On mobile, scroll to side panel or show it
+                if (window.innerWidth <= 768) {
+                    const sidePanel = document.querySelector('.side-panel');
+                    sidePanel.scrollIntoView({ behavior: 'smooth' });
+                }
+            }
+        }
+
+        // Show Customer Preview
+        function showCustomerPreview(message) {
+            customerPreview.innerHTML = `
+                <div class="customer-preview-content">
+                    <div class="preview-avatar">${message.avatar}</div>
+                    <div class="preview-name">${message.customerName}</div>
+                    <div class="preview-id">${message.customerId}</div>
+                    <div class="preview-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Account Type</span>
+                            <span class="detail-value">${message.accountType}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Last Interaction</span>
+                            <span class="detail-value">${message.lastInteraction}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Loan Status</span>
+                            <span class="detail-value">${message.loanStatus}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Message Status</span>
+                            <span class="detail-value" style="text-transform: capitalize;">${message.status}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Make function global for onclick
+        // Make functions global for onclick
+        window.selectMessage = selectMessage;
+        window.viewCustomerDetails = viewCustomerDetails;
+
+        // Attach Event Listeners
+        function attachEventListeners() {
+            // Search input
+            searchInput.addEventListener('input', (e) => {
+                searchTerm = e.target.value;
+                renderMessages();
+            });
+
+            // Filter buttons
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active class from all
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    
+                    // Add active class to clicked
+                    btn.classList.add('active');
+                    
+                    // Update filter
+                    currentFilter = btn.dataset.filter;
+                    
+                    // Re-render
+                    renderMessages();
+                });
+            });
+
+            // Navbar scroll effect
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+        }
+
+        // Update navigation and user info based on login status
+        async function updateUserInfo() {
+            // Load user data from localStorage or session
+            await loadUserData();
+            
+            const userData = localStorage.getItem('messageflow_user');
+            const userRole = localStorage.getItem('messageflow_role');
+            
+            if (userData && userRole) {
+                const user = JSON.parse(userData);
+                
+                // Update agent name in navigation
+                const agentNameElement = document.getElementById('agentName');
+                if (agentNameElement) {
+                    agentNameElement.textContent = user.name || 'Support Agent';
+                }
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', () => {
+            updateUserInfo();
+            init();
+        });
+        
+        // Auto-refresh messages every 30 seconds
+        setInterval(loadMessages, 30000);
+    </script>
+</body>
+</html>

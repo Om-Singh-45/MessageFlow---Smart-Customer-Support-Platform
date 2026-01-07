@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CS Messaging App</title>
+
+    <!-- ================= CSS ================= -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .role-selection, .customer-login, .agent-login, .customer-view, .agent-view {
+            background: white;
+            padding: 30px;
+            margin: 20px auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border-left: 6px solid #999;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .urgent {
+            border-left-color: #dc3545;
+        }
+
+        .normal {
+            border-left-color: #6c757d;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .badge.urgent {
+            background: #dc3545;
+        }
+
+        .badge.normal {
+            background: #6c757d;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            resize: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .canned button {
+            background: transparent;
+            border: 1px solid #ccc;
+            margin-right: 5px;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .message-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .customer-message {
+            background-color: #e3f2fd;
+        }
+
+        .agent-reply {
+            background-color: #f1f8e9;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #4caf50;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Role Selection Screen -->
+        <div id="roleSelection" class="role-selection active">
+            <h2>CS Messaging App</h2>
+            <h3>Select Your Role</h3>
+            <button onclick="showCustomerLogin()">Continue as Customer</button>
+            <button class="btn-secondary" onclick="showAgentLogin()">Continue as Support Agent</button>
+        </div>
+
+        <!-- Customer Login Screen -->
+        <div id="customerLogin" class="customer-login">
+            <h2>Customer Login</h2>
+            <div>
+                <label for="customerName">Name *</label>
+                <input type="text" id="customerName" placeholder="Enter your name" required>
+            </div>
+            <div>
+                <label for="customerEmail">Email (Optional)</label>
+                <input type="email" id="customerEmail" placeholder="Enter your email">
+            </div>
+            <button onclick="loginAsCustomer()">Submit</button>
+            <button class="btn-secondary" onclick="showRoleSelection()">Back</button>
+        </div>
+
+        <!-- Agent Login Screen -->
+        <div id="agentLogin" class="agent-login">
+            <h2>Support Agent Login</h2>
+            <div>
+                <label for="agentName">Agent Name</label>
+                <input type="text" id="agentName" placeholder="Enter your name">
+            </div>
+            <button onclick="loginAsAgent()">Submit</button>
+            <button class="btn-secondary" onclick="showRoleSelection()">Back</button>
+        </div>
+
+        <!-- Customer View -->
+        <div id="customerView" class="customer-view">
+            <h2>Customer Message Center</h2>
+            <div id="customerInfo"></div>
+            <div>
+                <label for="customerMessage">Your Message</label>
+                <textarea id="customerMessage" rows="4" placeholder="Type your message here..."></textarea>
+            </div>
+            <button onclick="sendCustomerMessage()">Send Message</button>
+            <button class="btn-secondary" onclick="logout()">Logout</button>
+            
+            <h3>Your Messages & Replies</h3>
+            <div id="customerMessages"></div>
+        </div>
+
+        <!-- Agent View -->
+        <div id="agentView" class="agent-view">
+            <h2>Support Agent Dashboard</h2>
+            <div id="agentInfo"></div>
+            <input type="text" id="search" placeholder="Search messages or customers...">
+            <button class="btn-secondary" onclick="logout()">Logout</button>
+            <div id="messages"></div>
+        </div>
+    </div>
+
+    <!-- ================= JavaScript ================= -->
+    <script>
+        // Role and user data
+        let currentUser = {
+            role: null,
+            name: null,
+            email: null
+        };
+
+        // Show role selection screen
+        function showRoleSelection() {
+            document.getElementById('roleSelection').classList.add('active');
+            document.getElementById('customerLogin').classList.remove('active');
+            document.getElementById('agentLogin').classList.remove('active');
+            document.getElementById('customerView').classList.remove('active');
+            document.getElementById('agentView').classList.remove('active');
+        }
+
+        // Show customer login screen
+        function showCustomerLogin() {
+            document.getElementById('roleSelection').classList.remove('active');
+            document.getElementById('customerLogin').classList.add('active');
+            document.getElementById('agentLogin').classList.remove('active');
+            document.getElementById('customerView').classList.remove('active');
+            document.getElementById('agentView').classList.remove('active');
+        }
+
+        // Show agent login screen
+        function showAgentLogin() {
+            document.getElementById('roleSelection').classList.remove('active');
+            document.getElementById('customerLogin').classList.remove('active');
+            document.getElementById('agentLogin').classList.add('active');
+            document.getElementById('customerView').classList.remove('active');
+            document.getElementById('agentView').classList.remove('active');
+        }
+
+        // Customer login
+        function loginAsCustomer() {
+            const name = document.getElementById('customerName').value.trim();
+            const email = document.getElementById('customerEmail').value.trim();
+
+            if (!name) {
+                alert('Name is required');
+                return;
+            }
+
+            currentUser = {
+                role: 'customer',
+                name: name,
+                email: email
+            };
+
+            document.getElementById('customerInfo').innerHTML = `<h3>Welcome, ${name}!</h3>`;
+            showCustomerView();
+            loadCustomerMessages();
+        }
+
+        // Agent login
+        function loginAsAgent() {
+            const name = document.getElementById('agentName').value.trim();
+
+            if (!name) {
+                alert('Agent name is required');
+                return;
+            }
+
+            currentUser = {
+                role: 'agent',
+                name: name,
+                email: null
+            };
+
+            document.getElementById('agentInfo').innerHTML = `<h3>Welcome, Agent ${name}!</h3>`;
+            showAgentView();
+            loadMessages();
+        }
+
+        // Show customer view
+        function showCustomerView() {
+            document.getElementById('roleSelection').classList.remove('active');
+            document.getElementById('customerLogin').classList.remove('active');
+            document.getElementById('agentLogin').classList.remove('active');
+            document.getElementById('customerView').classList.add('active');
+            document.getElementById('agentView').classList.remove('active');
+        }
+
+        // Show agent view
+        function showAgentView() {
+            document.getElementById('roleSelection').classList.remove('active');
+            document.getElementById('customerLogin').classList.remove('active');
+            document.getElementById('agentLogin').classList.remove('active');
+            document.getElementById('customerView').classList.remove('active');
+            document.getElementById('agentView').classList.add('active');
+        }
+
+        // Logout function
+        function logout() {
+            currentUser = {
+                role: null,
+                name: null,
+                email: null
+            };
+            showRoleSelection();
+        }
+
+        // Send customer message
+        async function sendCustomerMessage() {
+            const message = document.getElementById('customerMessage').value.trim();
+            
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+
+            try {
+                const response = await fetch('/send-message', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        customer_name: currentUser.name,
+                        message: message,
+                        email: currentUser.email
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('customerMessage').value = '';
+                    loadCustomerMessages(); // Reload messages to show the new one
+                    alert('Message sent successfully!');
+                } else {
+                    alert('Failed to send message');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Error sending message');
+            }
+        }
+
+        // Load customer's own messages
+        async function loadCustomerMessages() {
+            try {
+                const response = await fetch(`/customer-messages?customer_name=${encodeURIComponent(currentUser.name)}`);
+                const data = await response.json();
+
+                let html = '';
+                data.forEach(m => {
+                    html += `
+                    <div class="message-item">
+                        <div class="message-header">
+                            <strong>${m.customer_name}</strong>
+                            <span class="badge ${m.urgency === "Urgent" ? "urgent" : "normal"}">${m.urgency}</span>
+                        </div>
+                        <div class="customer-message">
+                            <p>${m.message}</p>
+                            <small>Posted: ${m.timestamp}</small>
+                        </div>
+                        ${m.reply ? `
+                        <div class="agent-reply">
+                            <strong>Agent Reply:</strong>
+                            <p>${m.reply}</p>
+                            <small>Replied: ${m.reply_timestamp || m.timestamp}</small>
+                        </div>
+                        ` : ''}
+                    </div>
+                    `;
+                });
+
+                document.getElementById('customerMessages').innerHTML = html;
+            } catch (error) {
+                console.error('Error loading customer messages:', error);
+            }
+        }
+
+        // Load all messages for agents
+        async function loadMessages() {
+            try {
+                const search = document.getElementById("search").value;
+                const res = await fetch(`/messages?search=${search}`);
+                const data = await res.json();
+
+                let html = "";
+
+                data.forEach(m => {
+                    html += `
+                    <div class="card ${m.urgency === "Urgent" ? "urgent" : "normal"}">
+                        <div class="message-header">
+                            <h4>${m.customer_name}
+                                <span class="badge ${m.urgency === "Urgent" ? "urgent" : "normal"}">
+                                    ${m.urgency}
+                                </span>
+                            </h4>
+                            <small>${m.timestamp}</small>
+                        </div>
+
+                        <p>${m.message}</p>
+
+                        <textarea id="reply-${m.id}" rows="2" placeholder="Type reply...">
+${m.reply || ""}
+                        </textarea>
+
+                        <br>
+                        <button onclick="sendReply(${m.id})">Send Reply</button>
+
+                        <div class="canned">
+                            <button onclick="useCanned(${m.id}, 'Your loan is currently under review.')">
+                                Loan Review
+                            </button>
+                            <button onclick="useCanned(${m.id}, 'We will get back to you shortly.')">
+                                General
+                            </button>
+                        </div>
+                        
+                        ${m.reply ? `<div><strong>Reply:</strong> ${m.reply}</div>` : ''}
+                    </div>
+                    `;
+                });
+
+                document.getElementById("messages").innerHTML = html;
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
+        }
+
+        // Send reply to a message (for agents)
+        async function sendReply(id) {
+            const reply = document.getElementById(`reply-${id}`).value;
+            if (!reply.trim()) {
+                alert('Please enter a reply');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/reply/${id}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ reply })
+                });
+                
+                if (response.ok) {
+                    loadMessages(); // Reload messages to show the reply
+                } else {
+                    alert('Failed to send reply');
+                }
+            } catch (error) {
+                console.error('Error sending reply:', error);
+                alert('Error sending reply');
+            }
+        }
+
+        // Use canned response
+        function useCanned(id, text) {
+            document.getElementById(`reply-${id}`).value = text;
+        }
+
+        // Add event listener for search input
+        document.getElementById("search").addEventListener("input", loadMessages);
+
+        // Auto-refresh agent view every 5 seconds
+        setInterval(() => {
+            if (currentUser.role === 'agent') {
+                loadMessages();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

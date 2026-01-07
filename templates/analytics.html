@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Agent Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f8f9ff; color: #1a1a1a; min-height: 100vh; }
+        
+        nav { background: white; border-bottom: 1px solid #e5e7eb; padding: 1rem 2rem; position: fixed; top: 0; width: 100%; z-index: 100; }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-decoration: none; }
+        .back-link { text-decoration: none; color: #4b5563; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
+        .back-link:hover { color: #667eea; }
+
+        .container { max-width: 1000px; margin: 100px auto 30px; padding: 2rem; }
+        h1 { margin-bottom: 2rem; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-label { color: #6b7280; font-size: 0.9rem; font-weight: 500; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .stat-value { font-size: 2.5rem; font-weight: 700; color: #1a1a1a; }
+        
+        .c-urgent { color: #dc2626; }
+        .c-resolved { color: #10b981; }
+
+        .chart-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .simple-bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 1rem;
+            height: 200px;
+            margin-top: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .bar-group { text-align: center; flex: 1; }
+        .bar { 
+            background: #667eea; 
+            border-radius: 4px 4px 0 0; 
+            width: 40px; 
+            margin: 0 auto 0.5rem; 
+            transition: height 1s ease;
+            height: 0; /* Animated */
+        }
+        .bar-label { font-size: 0.85rem; color: #6b7280; }
+
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">MessageFlow</a>
+            <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Analytics Overview</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Messages</div>
+                <div class="stat-value" id="valTotal">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Open Issues</div>
+                <div class="stat-value" id="valOpen">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Urgent Issues</div>
+                <div class="stat-value c-urgent" id="valUrgent">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Resolved</div>
+                <div class="stat-value c-resolved" id="valResolved">-</div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <h3>Distribution</h3>
+            <div class="simple-bar-chart">
+                <div class="bar-group">
+                    <div class="bar" id="barOpen" style="background: #f97316;"></div>
+                    <div class="bar-label">Open</div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar" id="barUrgent" style="background: #ef4444;"></div>
+                    <div class="bar-label">Urgent</div>
+                </div>
+                <div class="bar-group">
+                    <div class="bar" id="barResolved" style="background: #10b981;"></div>
+                    <div class="bar-label">Resolved</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadAnalytics() {
+            try {
+                const response = await fetch('/api/agent/stats'); 
+                // Reusing existing stats endpoint since it has most data, 
+                // but usually we'd make a specific /analytics one if more detail needed.
+                // For this demo, let's just use the /api/agent/stats we already built or enhance it.
+                // Actually, let's fetch from the new dedicated endpoint defined in requirements if we made it.
+                // We'll implement /api/agent/analytics in app.py next.
+                
+                const res = await fetch('/api/agent/analytics');
+                const data = await res.json();
+
+                document.getElementById('valTotal').textContent = data.total;
+                document.getElementById('valOpen').textContent = data.open;
+                document.getElementById('valUrgent').textContent = data.urgent;
+                document.getElementById('valResolved').textContent = data.resolved;
+
+                // Simple normalization for bars (assuming max is total)
+                const total = data.total || 1;
+                document.getElementById('barOpen').style.height = `${(data.open / total) * 100}%`;
+                document.getElementById('barUrgent').style.height = `${(data.urgent / total) * 100}%`;
+                document.getElementById('barResolved').style.height = `${(data.resolved / total) * 100}%`;
+
+            } catch (e) {
+                console.error("Error loading analytics", e);
+            }
+        }
+
+        loadAnalytics();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - MessageFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f3f4ff 100%);
+            min-height: 100vh;
+        }
+
+        /* Navigation - Matching Home & Login Pages */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e5e7eb;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #4b5563;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #667eea;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.65rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            color: #667eea;
+            border: 2px solid #667eea;
+            background: transparent;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px -1px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Main Container */
+        .register-container {
+            max-width: 1000px;
+            margin: 120px auto 60px;
+            padding: 0 2rem;
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 3rem;
+            gap: 1rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.4s ease;
+        }
+
+        .step.active .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+
+        .step-label {
+            font-weight: 600;
+            color: #6b7280;
+            transition: color 0.4s ease;
+        }
+
+        .step.active .step-label {
+            color: #667eea;
+        }
+
+        .step.completed .step-label {
+            color: #10b981;
+        }
+
+        .step-divider {
+            width: 60px;
+            height: 2px;
+            background: #e5e7eb;
+            transition: background 0.4s ease;
+        }
+
+        .step.completed ~ .step-divider {
+            background: #10b981;
+        }
+
+        /* Role Selection Section */
+        .role-selection {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.5s ease;
+        }
+
+        .role-selection.hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+            position: absolute;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #1a1a1a;
+        }
+
+        .section-header p {
+            font-size: 1.15rem;
+            color: #6b7280;
+        }
+
+        .role-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .role-card {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .role-card:hover {
+            transform: translateY(-8px);
+            border-color: #667eea;
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.2);
+        }
+
+        .role-card.selected {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        }
+
+        .role-card-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .role-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .role-card:hover .role-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .role-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #1a1a1a;
+        }
+
+        .role-card p {
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .role-checkmark {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 28px;
+            height: 28px;
+            background: #10b981;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .role-card.selected .role-checkmark {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Registration Form Section */
+        .register-form-container {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            transition: all 0.5s ease;
+            position: absolute;
+            width: 100%;
+            max-width: 1000px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+        }
+
+        .register-form-container.active {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+            pointer-events: all;
+            position: relative;
+            left: auto;
+            transform: none;
+        }
+
+        .register-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .selected-role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 50px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .register-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #1a1a1a;
+        }
+
+        .register-header p {
+            color: #6b7280;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: #667eea;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            gap: 0.75rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            display: none;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .status-message.error {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
+
+        .status-message.success {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #15803d;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            font-size: 0.95rem;
+        }
+
+        .required {
+            color: #ef4444;
+            margin-left: 0.25rem;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 0.95rem 1.25rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .form-input.valid {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .form-input.invalid {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .validation-icon {
+            position: absolute;
+            right: 1rem;
+            top: 2.75rem;
+            font-size: 1.2rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .validation-icon.show {
+            opacity: 1;
+        }
+
+        .validation-icon.valid {
+            color: #10b981;
+        }
+
+        .validation-icon.invalid {
+            color: #ef4444;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-top: 2rem;
+            padding: 1.25rem;
+            background: #f9fafb;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-group:has(input:checked) {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+            flex-shrink: 0;
+            margin-top: 0.15rem;
+        }
+
+        .checkbox-group label {
+            font-size: 0.95rem;
+            color: #4b5563;
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .checkbox-group a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+
+        .register-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .register-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .register-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .register-button.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6b7280;
+        }
+
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .login-link a:hover {
+            color: #764ba2;
+        }
+
+        .optional-tag {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            font-weight: 400;
+            margin-left: 0.25rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .section-header h1 {
+                font-size: 2rem;
+            }
+
+            .role-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .register-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .step-indicator {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .step-divider {
+                width: 2px;
+                height: 30px;
+            }
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            display: none;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+
+        .status-message.error {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
+
+        .status-message.success {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+            color: #15803d;
+        }
+
+        /* Animation Keyframes */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">MessageFlow</a>
+            <ul class="nav-links">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="index.html#features">Features</a></li>
+                <li><a href="index.html#how-it-works">How It Works</a></li>
+                <li><a href="index.html#pricing">Pricing</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="nav-buttons">
+                <a href="/login" class="btn btn-secondary">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Registration Container -->
+    <div class="register-container">
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <span class="step-label">Select Role</span>
+            </div>
+            <div class="step-divider"></div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <span class="step-label">Registration Details</span>
+            </div>
+            <div class="step-divider"></div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <span class="step-label">Complete</span>
+            </div>
+        </div>
+
+        <!-- Role Selection Section -->
+        <div class="role-selection" id="roleSelection">
+            <div class="section-header">
+                <h1>Create Your Account</h1>
+                <p>Choose your role to get started with MessageFlow</p>
+            </div>
+            
+            <div class="role-cards">
+                <!-- Customer Role Card -->
+                <div class="role-card" data-role="customer">
+                    <div class="role-checkmark">✓</div>
+                    <div class="role-card-content">
+                        <div class="role-icon">👤</div>
+                        <h3>Customer</h3>
+                        <p>Get instant support and manage your inquiries efficiently with our customer portal</p>
+                    </div>
+                </div>
+
+                <!-- Support Agent Role Card -->
+                <div class="role-card" data-role="agent">
+                    <div class="role-checkmark">✓</div>
+                    <div class="role-card-content">
+                        <div class="role-icon">🎧</div>
+                        <h3>Support Agent</h3>
+                        <p>Join our team to provide exceptional customer service and manage support tickets</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Form Section -->
+        <div class="register-form-container" id="registerFormContainer">
+            <div class="register-card animate-in">
+                <button class="back-button" id="backButton">
+                    ← Back to role selection
+                </button>
+
+                <div class="register-header">
+                    <div class="selected-role-badge" id="roleBadge">
+                        <span id="roleIcon"></span>
+                        <span id="roleText"></span>
+                    </div>
+                    <h2 id="registerTitle">Complete Your Registration</h2>
+                    <p id="registerSubtitle">Fill in your details to create your account</p>
+                </div>
+
+                <form id="registerForm">
+                    <div id="statusMessage" class="status-message"></div>
+                    <!-- Customer Form Fields -->
+                    <div id="customerFields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="customerName">Full Name<span class="required">*</span></label>
+                                <input 
+                                    type="text" 
+                                    id="customerName" 
+                                    class="form-input" 
+                                    placeholder="John Doe"
+                                    required
+                                >
+                                <span class="validation-icon">✓</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="customerEmail">Email Address<span class="required">*</span></label>
+                                <input 
+                                    type="email" 
+                                    id="customerEmail" 
+                                    class="form-input" 
+                                    placeholder="you@example.com"
+                                    required
+                                >
+                                <span class="validation-icon">✓</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="customerPhone">Phone Number<span class="optional-tag">(optional)</span></label>
+                                <input 
+                                    type="tel" 
+                                    id="customerPhone" 
+                                    class="form-input" 
+                                    placeholder="+91 98765 43210"
+                                >
+                                <span class="validation-icon">✓</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="accountType">Account Type<span class="required">*</span></label>
+                                <select id="accountType" class="form-select" required>
+                                    <option value="">Select account type</option>
+                                    <option value="personal">Personal</option>
+                                    <option value="business">Business</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="customerConsent" required>
+                            <label for="customerConsent">
+                                I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Support Agent Form Fields -->
+                    <div id="agentFields" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="agentName">Full Name<span class="required">*</span></label>
+                                <input 
+                                    type="text" 
+                                    id="agentName" 
+                                    class="form-input" 
+                                    placeholder="Jane Smith"
+                                    required
+                                >
+                                <span class="validation-icon">✓</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="agentEmail">Work Email<span class="required">*</span></label>
+                                <input 
+                                    type="email" 
+                                    id="agentEmail" 
+                                    class="form-input" 
+                                    placeholder="jane.smith@company.com"
+                                    required
+                                >
+                                <span class="validation-icon">✓</span>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="agentId">Employee / Agent ID<span class="required">*</span></label>
+                                <input 
+                                    type="text" 
+                                    id="agentId" 
+                                    class="form-input" 
+                                    placeholder="EMP-12345"
+                                    required
+                                >
+                                <span class="validation-icon">✓</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="department">Department<span class="required">*</span></label>
+                                <select id="department" class="form-select" required>
+                                    <option value="">Select department</option>
+                                    <option value="loans">Loans</option>
+                                    <option value="support">Support</option>
+                                    <option value="operations">Operations</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="shiftPreference">Shift Preference<span class="optional-tag">(optional)</span></label>
+                            <select id="shiftPreference" class="form-select">
+                                <option value="">Select preferred shift</option>
+                                <option value="morning">Morning (9 AM - 5 PM)</option>
+                                <option value="afternoon">Afternoon (1 PM - 9 PM)</option>
+                                <option value="night">Night (9 PM - 5 AM)</option>
+                                <option value="flexible">Flexible</option>
+                            </select>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="agentConsent" required>
+                            <label for="agentConsent">
+                                I agree to the company policies and <a href="#">Code of Conduct</a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="register-button" id="registerButton">
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="login-link">
+                    Already have an account? <a href="/login">Login here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let selectedRole = null;
+
+        // DOM elements
+        const roleCards = document.querySelectorAll('.role-card');
+        const roleSelection = document.getElementById('roleSelection');
+        const registerFormContainer = document.getElementById('registerFormContainer');
+        const backButton = document.getElementById('backButton');
+        const registerForm = document.getElementById('registerForm');
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const roleBadge = document.getElementById('roleBadge');
+        const roleIcon = document.getElementById('roleIcon');
+        const roleText = document.getElementById('roleText');
+        const registerTitle = document.getElementById('registerTitle');
+        const registerSubtitle = document.getElementById('registerSubtitle');
+        const registerButton = document.getElementById('registerButton');
+        const customerFields = document.getElementById('customerFields');
+        const agentFields = document.getElementById('agentFields');
+
+        // Role selection handler
+        roleCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const role = card.dataset.role;
+                
+                // Remove previous selection
+                roleCards.forEach(c => c.classList.remove('selected'));
+                
+                // Add selection to clicked card
+                card.classList.add('selected');
+                selectedRole = role;
+
+                // Wait for animation, then transition to form
+                setTimeout(() => {
+                    showRegistrationForm(role);
+                }, 400);
+            });
+        });
+
+        // Show registration form based on selected role
+        function showRegistrationForm(role) {
+            // Update step indicator
+            step1.classList.remove('active');
+            step1.classList.add('completed');
+            step2.classList.add('active');
+
+            // Hide role selection
+            roleSelection.classList.add('hidden');
+
+            // Show registration form
+            registerFormContainer.classList.add('active');
+
+            // Update form content based on role
+            if (role === 'customer') {
+                roleIcon.textContent = '👤';
+                roleText.textContent = 'Customer Registration';
+                registerTitle.textContent = 'Customer Registration';
+                registerSubtitle.textContent = 'Create your customer account to access support';
+                registerButton.textContent = 'Create Customer Account';
+                
+                // Show customer fields
+                customerFields.style.display = 'block';
+                agentFields.style.display = 'none';
+                
+                // Toggle required attributes for Customer
+                document.getElementById('customerName').setAttribute('required', '');
+                document.getElementById('customerEmail').setAttribute('required', '');
+                document.getElementById('accountType').setAttribute('required', '');
+                document.getElementById('customerConsent').setAttribute('required', '');
+                
+                // Remove required attributes from Agent fields
+                document.getElementById('agentName').removeAttribute('required');
+                document.getElementById('agentEmail').removeAttribute('required');
+                document.getElementById('agentId').removeAttribute('required');
+                document.getElementById('department').removeAttribute('required');
+                document.getElementById('agentConsent').removeAttribute('required');
+                
+                // Enable customer field validation
+                enableFieldValidation('customerName');
+                enableFieldValidation('customerEmail');
+                enableFieldValidation('customerPhone');
+            } else if (role === 'agent') {
+                roleIcon.textContent = '🎧';
+                roleText.textContent = 'Agent Registration';
+                registerTitle.textContent = 'Support Agent Registration';
+                registerSubtitle.textContent = 'Join our support team';
+                registerButton.textContent = 'Create Agent Account';
+                
+                // Show agent fields
+                customerFields.style.display = 'none';
+                agentFields.style.display = 'block';
+                
+                // Toggle required attributes for Agent
+                document.getElementById('agentName').setAttribute('required', '');
+                document.getElementById('agentEmail').setAttribute('required', '');
+                document.getElementById('agentId').setAttribute('required', '');
+                document.getElementById('department').setAttribute('required', '');
+                document.getElementById('agentConsent').setAttribute('required', '');
+                
+                // Remove required attributes from Customer fields
+                document.getElementById('customerName').removeAttribute('required');
+                document.getElementById('customerEmail').removeAttribute('required');
+                document.getElementById('accountType').removeAttribute('required');
+                document.getElementById('customerConsent').removeAttribute('required');
+                
+                // Enable agent field validation
+                enableFieldValidation('agentName');
+                enableFieldValidation('agentEmail');
+                enableFieldValidation('agentId');
+            }
+
+            // Scroll to top smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Back button handler
+        backButton.addEventListener('click', () => {
+            // Update step indicator
+            step2.classList.remove('active');
+            step1.classList.remove('completed');
+            step1.classList.add('active');
+
+            // Show role selection
+            roleSelection.classList.remove('hidden');
+
+            // Hide registration form
+            registerFormContainer.classList.remove('active');
+
+            // Reset selection
+            roleCards.forEach(c => c.classList.remove('selected'));
+            selectedRole = null;
+
+            // Reset form
+            registerForm.reset();
+            
+            // Clear all validation states
+            document.querySelectorAll('.form-input').forEach(input => {
+                input.classList.remove('valid', 'invalid');
+                const icon = input.nextElementSibling;
+                if (icon && icon.classList.contains('validation-icon')) {
+                    icon.classList.remove('show', 'valid', 'invalid');
+                }
+            });
+        });
+
+        // Field validation with visual feedback
+        function enableFieldValidation(fieldId) {
+            const input = document.getElementById(fieldId);
+            const icon = input.nextElementSibling;
+
+            // Real-time validation
+            input.addEventListener('input', () => {
+                validateField(input, icon);
+            });
+
+            // Blur validation
+            input.addEventListener('blur', () => {
+                if (input.value.trim() !== '') {
+                    validateField(input, icon);
+                }
+            });
+        }
+
+        function validateField(input, icon) {
+            const value = input.value.trim();
+            const type = input.type;
+            let isValid = false;
+
+            if (value === '') {
+                input.classList.remove('valid', 'invalid');
+                if (icon) {
+                    icon.classList.remove('show');
+                }
+                return;
+            }
+
+            // Email validation
+            if (type === 'email') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                isValid = emailRegex.test(value);
+            }
+            // Phone validation (optional but validate format if provided)
+            else if (type === 'tel') {
+                const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,5}[)]?[-\s\.]?[0-9]{4,6}$/;
+                isValid = phoneRegex.test(value) || value === '';
+            }
+            // Text validation (minimum 2 characters)
+            else if (type === 'text') {
+                isValid = value.length >= 2;
+            }
+
+            // Update visual state
+            if (isValid) {
+                input.classList.remove('invalid');
+                input.classList.add('valid');
+                if (icon) {
+                    icon.classList.remove('invalid');
+                    icon.classList.add('valid', 'show');
+                }
+            } else {
+                input.classList.remove('valid');
+                input.classList.add('invalid');
+                if (icon) {
+                    icon.classList.remove('valid');
+                    icon.classList.add('invalid', 'show');
+                }
+            }
+        }
+
+        const statusMessageDiv = document.getElementById('statusMessage');
+
+        function showStatus(message, type) {
+            statusMessageDiv.textContent = message;
+            statusMessageDiv.className = `status-message ${type}`;
+            statusMessageDiv.style.display = 'block';
+            statusMessageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function hideStatus() {
+            statusMessageDiv.style.display = 'none';
+        }
+
+        // Form submission handler
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            hideStatus();
+
+            let userData = {
+                role: selectedRole,
+                registrationTime: new Date().toISOString()
+            };
+
+            // Collect data based on role
+            if (selectedRole === 'customer') {
+                userData = {
+                    ...userData,
+                    name: document.getElementById('customerName').value,
+                    email: document.getElementById('customerEmail').value,
+                    phone: document.getElementById('customerPhone').value,
+                    account_type: document.getElementById('accountType').value
+                };
+            } else if (selectedRole === 'agent') {
+                userData = {
+                    ...userData,
+                    name: document.getElementById('agentName').value,
+                    email: document.getElementById('agentEmail').value,
+                    agentId: document.getElementById('agentId').value,
+                    department: document.getElementById('department').value,
+                    shiftPreference: document.getElementById('shiftPreference').value
+                };
+            }
+
+            // Show loading state
+            registerButton.textContent = 'Creating account...';
+            registerButton.classList.add('loading');
+            registerButton.disabled = true;
+
+            // Send registration request to backend
+            fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Store user data in localStorage
+                    localStorage.setItem('messageflow_user', JSON.stringify(data.user));
+                    localStorage.setItem('messageflow_role', selectedRole);
+                    
+                    // Update step indicator to completed
+                    step2.classList.remove('active');
+                    step2.classList.add('completed');
+                    step3.classList.add('active', 'completed');
+
+                    // Show success message
+                    showStatus(`Registration successful! Welcome to MessageFlow, ${userData.name}. Redirecting...`, 'success');
+                    
+                    setTimeout(() => {
+                        // Redirect based on role
+                        if (selectedRole === 'customer') {
+                            window.location.href = '/customer';
+                        } else {
+                            window.location.href = '/dashboard';
+                        }
+                    }, 1500);
+                } else {
+                    showStatus(data.error || 'Registration failed. Please try again.', 'error');
+                    registerButton.textContent = 'Create Account';
+                    registerButton.classList.remove('loading');
+                    registerButton.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Registration error:', error);
+                showStatus('Registration failed: ' + error.message, 'error');
+                registerButton.textContent = 'Create Account';
+                registerButton.classList.remove('loading');
+                registerButton.disabled = false;
+            });
+        });
+
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Check if user is already registered
+        window.addEventListener('load', () => {
+            const storedUser = localStorage.getItem('messageflow_user');
+            if (storedUser) {
+                const user = JSON.parse(storedUser);
+                console.log('User already registered:', user);
+                // Optionally show a message or redirect
+            }
+        });
+    </script>
+</body>
+</html>
