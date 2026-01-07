@@ -85,17 +85,17 @@ Branch_intern/
 git clone https://github.com/Om-Singh-45/MessageFlow---Smart-Customer-Support-Platform.git
 
 
-##Navigate to the project folder:
+#Navigate to the project folder:
 
 cd Branch_intern
 
 
-## Install dependencies:
+# Install dependencies:
 
 pip install -r requirements.txt
 
 
-##bRun the application:
+# Run the application:
 
 python app.py
 
