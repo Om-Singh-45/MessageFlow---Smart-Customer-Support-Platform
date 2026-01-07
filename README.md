@@ -91,8 +91,6 @@ pip install -r requirements.txt
 python app.py
 
 
-Made with ❤️ for internship learning and full-stack development practice.
-
 
 ---
 
@@ -101,5 +99,11 @@ Made with ❤️ for internship learning and full-stack development practice.
 1. **Clone the repository:**
 ```bash
 git clone https://github.com/Om-Singh-45/MessageFlow---Smart-Customer-Support-Platform.git
+
+
+
+
+
+Made with ❤️ for internship learning and full-stack development practice.
 
 
